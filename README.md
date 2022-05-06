@@ -1,3 +1,5 @@
+This branch was renamed to "historical" to preserve my first in Rust's history
+
 # Cowfetch
 Cowsay+Neofetch made in Rust
 
