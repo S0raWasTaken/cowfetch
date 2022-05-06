@@ -1,55 +1,54 @@
-use colorful::Color;
-use colorful::Colorful;
-use sys_info::*;
+use colors::*;
+use columns::Columns;
+use sys_info::{cpu_num, disk_info, hostname, linux_os_release, mem_info, os_release};
 
-fn main() -> Result<(), String> {
-    let cpu_threads = cpu_num().map_err(|_| String::from("No threads"))?;
+mod colors;
 
-    let diskinfo = disk_info().map_err(|_| String::from("No disk info"))?;
-    let hostname = hostname().map_err(|_| String::from("No hostname"))?;
-
-    let kernel_info = os_release().map_err(|_| String::from("No kernel info"))?;
-
-    let release_info = linux_os_release().map_err(|_| String::from("No release info"))?;
-    let pretty_distro_name = release_info
-        .pretty_name
-        .ok_or(1)
-        .map_err(|_| String::from("No distro name"))?;
-    let version = release_info
-        .build_id
-        .ok_or(2)
-        .map_err(|_| String::from("No release version"))?;
-
-    let meminfo = mem_info().map_err(|_| String::from("No memory info"))?;
-
+const COW: &str = r"
+|
+|
+| \   ^__^
+|  \  (oo)\_______
+|     (__)\       )\/\
+|         ||----w |
+|         ||     ||
+";
+const DEFAULT: &str = "Unknown";
+fn main() {
+    let os = linux_os_release().unwrap_or_default();
     println!(
-        "   {}    {}: {}\n    {}: {}\n    {}: {}\n    {}: {}\n    {}: {}\n    {}: {} GiB\n    {}: {} MiB\n  {}",
-        "___________________________\n  /                           \\\n".color(Color::MediumPurple),
-        "OS".color(Color::Red),
-        pretty_distro_name,
-        "Version".color(Color::LightBlue),
-        version,
-        "Hostname".color(Color::LightCoral),
-        hostname,
-        "Kernel".color(Color::Yellow),
-        kernel_info,
-        "CPU_Threads".color(Color::Pink1),
-        cpu_threads,
-        "Disk_Total".color(Color::Green),
-        diskinfo.total/1024000,
-        "Mem_Total".color(Color::Orange1),
-        meminfo.total/1024,
-        "\\___________________________/".color(Color::MediumPurple)
+        "{}",
+        Columns::from(vec![
+            vec![
+                &*format!("{BLUE} -----------------------------"),
+                &*format!("{BLUE}| {RED}OS{RESET}: {}{BLUE}", os.pretty_name()),
+                &*format!(
+                    "{BLUE}| {BLUE}Version{RESET}: {}{BLUE}",
+                    os.build_id.unwrap_or_else(|| String::from(DEFAULT))
+                ),
+                &*format!(
+                    "{BLUE}| {YELLOW}Hostname{RESET}: {}{BLUE}",
+                    hostname().unwrap_or_else(|_| String::from(DEFAULT))
+                ),
+                &*format!(
+                    "{BLUE}| {PURPLE}Kernel{RESET}: {}{BLUE}",
+                    os_release().unwrap_or_else(|_| String::from(DEFAULT))
+                ),
+                &*format!(
+                    "{BLUE}| {CYAN}CPU_Threads{RESET}: {}{BLUE}",
+                    cpu_num().unwrap_or(0)
+                ),
+                &*format!(
+                    "{BLUE}| {GREEN}Mem_total{RESET}: {} GiB{BLUE}",
+                    mem_info().unwrap().total / 1024000
+                ),
+                &*format!(
+                    "{BLUE}| {GREEN}Disk_total{RESET}: {} GiB{BLUE}",
+                    disk_info().unwrap().total / 1024000,
+                ),
+                &*format!("{BLUE} -----------------------------"),
+            ],
+            COW.split('\n').collect::<Vec<_>>(),
+        ])
     );
-
-    let cowsay = "          \\
-           \\   ^__^
-            \\  (oo)\\_______
-               (__)\\       )\\/\\
-                   ||----w |
-                   ||     ||";
-    
-    println!("{}", cowsay.color(Color::MediumPurple));
-
-    Ok(())
 }
