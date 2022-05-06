@@ -1,4 +1,4 @@
-This branch was renamed to "historical" to preserve my first in Rust's history
+This branch was renamed to "historical" to preserve my first project in Rust's history
 
 # Cowfetch
 Cowsay+Neofetch made in Rust
